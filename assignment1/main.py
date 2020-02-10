@@ -28,15 +28,14 @@ Like_Traits = dict()
 
 def extract_like_traits(rows):
     for i in rows:
-        if i!="" and i != "-":
-            Like_Traits[i]=Like_Traits.setdefault(i,0)+1
+        if i != "" and i != "-":
+            Like_Traits[i] = Like_Traits.setdefault(i, 0) + 1
 
 
 def read_excel(path):
     data_dict = {}
     # read raw data
     df: pd.DataFrame = pd.read_excel(path, skiprows=[0])
-    df=df.fillna("")
     print(df.to_string())
     header = df.iloc[:, 0]
     df = df.iloc[:, 1:]
@@ -134,10 +133,16 @@ if __name__ == '__main__':
     for key, value in data_dict.items():
         value.to_excel(writer, sheet_name=key)
     data_frames = data_dict.values()
-    df_cleaned = pd.concat(data_frames, axis=1)
-    df_cleaned.to_excel(writer, sheet_name="All data")
+    df_all = pd.concat(data_frames, axis=1)
+    df_all.to_excel(writer, sheet_name="All data")
     writer.save()
-    #analyze data
-    plt.bar(Like_Traits.keys(), Like_Traits.values(), 0.1, color='g')
+    # characteristices rating by brand
+    df_character_rate = df_all.loc[:, 'Grip':'Packaging']
+    df_character_rate['Brand'] = df_all.loc[:, 'Brand']
+    group = df_character_rate.groupby('Brand').apply(pd.DataFrame.mean)
+    print(group.to_string())
+    ax=group.T.plot(kind='bar', title="charateristices rate", figsize=(15, 10), legend=True,
+                 fontsize=12)
+    fig = ax.get_figure()
+    fig.savefig('img/characteristics_rate.png')
     plt.show()
-
