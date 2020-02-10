@@ -2,27 +2,41 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import re
+
 Brush_Brand = ["Oral-B", "Any", "Reach", "Colgate", "Pepsodent", "Crest"]
-Brush_Type = ["Manual", "Battery", "Rechargeable"]
-def match_brush_brand(col1,col2):
-    match_brand=None
-    match_type=None
+Brush_Type = ["Manual", "Battery"]
+
+
+def match_brush_brand(col1, col2):
+    # filter for Q1. Current uses
+    match_brand = None
+    match_type = None
     for brand in Brush_Brand:
         if (brand in col1) or (brand in str(col2)):
-            match_brand=brand
+            match_brand = brand
     for type in Brush_Type:
         if type.lower() in col1.lower() or type.lower() in str(col2).lower():
-            match_type=type
+            match_type = type
     if match_type is None:
-        if "Batt" in col1:
-            match_type="Battery"
-    return match_brand,match_type
+        if "Batt" in col1 or "rechargeable" in col1:
+            match_type = "Battery"
+    return match_brand, match_type
+
+
+Like_Traits = dict()
+
+
+def extract_like_traits(rows):
+    for i in rows:
+        if i!="" and i != "-":
+            Like_Traits[i]=Like_Traits.setdefault(i,0)+1
 
 
 def read_excel(path):
     data_dict = {}
     # read raw data
     df: pd.DataFrame = pd.read_excel(path, skiprows=[0])
+    df=df.fillna("")
     print(df.to_string())
     header = df.iloc[:, 0]
     df = df.iloc[:, 1:]
@@ -41,12 +55,16 @@ def read_excel(path):
     # classify the current uses into 1. Brand 2. Brush Type
     df_current_uses = df.iloc[3:5, :]
     df_current_uses = df_current_uses.T
-    df_current_uses[["Brand","Type"]]=df_current_uses.apply(lambda x: match_brush_brand(x[3], x[4]),axis=1,result_type="expand")
+    df_current_uses[["Brand", "Type"]] = df_current_uses.apply(lambda x: match_brush_brand(x[3], x[4]), axis=1,
+                                                               result_type="expand")
+    # df_current_uses=df_current_uses[["Brand","Type"]]
     print(df_current_uses.to_string())
     data_dict.setdefault("Current uses", df_current_uses)
     # Q2. Likes
-    df_likes = df.iloc[6:12, :]
+    df_likes = df.iloc[6:11, :]
     df_likes = df_likes.T
+    df_likes.apply(lambda x: extract_like_traits(x), axis=1)
+    print(Like_Traits)
     print(df_likes.to_string())
     data_dict.setdefault("Likes", df_likes)
     # Q3. Dislikes
@@ -111,7 +129,7 @@ def read_excel(path):
 
 if __name__ == '__main__':
     # Merge clean data
-    writer = pd.ExcelWriter("cleaned_data.xlsx", engine="xlsxwriter")
+    writer = pd.ExcelWriter("filtered_data.xlsx", engine="xlsxwriter")
     data_dict = read_excel("./Product_Survey_Results.xlsx")
     for key, value in data_dict.items():
         value.to_excel(writer, sheet_name=key)
@@ -119,3 +137,7 @@ if __name__ == '__main__':
     df_cleaned = pd.concat(data_frames, axis=1)
     df_cleaned.to_excel(writer, sheet_name="All data")
     writer.save()
+    #analyze data
+    plt.bar(Like_Traits.keys(), Like_Traits.values(), 0.1, color='g')
+    plt.show()
+
