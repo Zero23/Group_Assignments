@@ -1,11 +1,28 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import re
+Brush_Brand = ["Oral-B", "Any", "Reach", "Colgate", "Pepsodent", "Crest"]
+Brush_Type = ["Manual", "Battery", "Rechargeable"]
+def match_brush_brand(col1,col2):
+    match_brand=None
+    match_type=None
+    for brand in Brush_Brand:
+        if (brand in col1) or (brand in str(col2)):
+            match_brand=brand
+    for type in Brush_Type:
+        if type.lower() in col1.lower() or type.lower() in str(col2).lower():
+            match_type=type
+    if match_type is None:
+        if "Batt" in col1:
+            match_type="Battery"
+    return match_brand,match_type
 
 
 def read_excel(path):
     data_dict = {}
     # read raw data
-    df = pd.read_excel(path, skiprows=[0])
+    df: pd.DataFrame = pd.read_excel(path, skiprows=[0])
     print(df.to_string())
     header = df.iloc[:, 0]
     df = df.iloc[:, 1:]
@@ -16,11 +33,15 @@ def read_excel(path):
     # Extract information
     # gender
     df_gender = df.iloc[0, :]
+    df_gender = df_gender.to_frame()
+    df_gender.columns = ["Gender"]
     print(df_gender.to_string())
     data_dict.setdefault("Gender", df_gender)
     # Q1. Current uses
+    # classify the current uses into 1. Brand 2. Brush Type
     df_current_uses = df.iloc[3:5, :]
     df_current_uses = df_current_uses.T
+    df_current_uses[["Brand","Type"]]=df_current_uses.apply(lambda x: match_brush_brand(x[3], x[4]),axis=1,result_type="expand")
     print(df_current_uses.to_string())
     data_dict.setdefault("Current uses", df_current_uses)
     # Q2. Likes
@@ -29,7 +50,7 @@ def read_excel(path):
     print(df_likes.to_string())
     data_dict.setdefault("Likes", df_likes)
     # Q3. Dislikes
-    df_dislikes = df.iloc[12:17, :]
+    df_dislikes = df.iloc[13:15, :]
     df_dislikes = df_dislikes.T
     print(df_dislikes.to_string())
     data_dict.setdefault("Dislikes", df_dislikes)
@@ -38,6 +59,10 @@ def read_excel(path):
     df_rate_price = df_rate_price.T
     print(df_rate_price.to_string())
     data_dict.setdefault("Rate the current price", df_rate_price)
+    # How much would you pay?
+    df_price_expectation = df.iloc[20, :].combine_first(df.iloc[21, :])
+    print(df_price_expectation.to_string())
+    data_dict.setdefault("How much would you pay", df_price_expectation)
     # Q5. Rate the characteristics below.
     df_rate_characteristics = df.iloc[24:45, :]
     df_rate_characteristics = df_rate_characteristics.T
