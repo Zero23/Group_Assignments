@@ -139,9 +139,13 @@ if __name__ == '__main__':
     # characteristices rating by brand
     df_character_rate = df_all.loc[:, 'Grip':'Packaging']
     df_character_rate['Brand'] = df_all.loc[:, 'Brand']
-    group = df_character_rate.groupby('Brand').apply(pd.DataFrame.mean)
-    print(group.to_string())
-    ax=group.T.plot(kind='bar', title="charateristices rate", figsize=(15, 10), legend=True,
+    group = df_character_rate.groupby('Brand')
+    df_mean_value=group.apply(pd.DataFrame.mean)
+    grpd = group.size().to_frame('sample size')
+    ax=grpd.plot.pie(y='sample size', figsize=(5, 5),autopct='%1.1f%%')
+    ax.get_figure().savefig('img/characteristics_rate_percentage.png')
+    print(grpd,df_mean_value.to_string())
+    ax=df_mean_value.T.plot(kind='bar', title="charateristices rate", figsize=(20, 10), legend=True,
                  fontsize=12)
     fig = ax.get_figure()
     fig.savefig('img/characteristics_rate.png')
