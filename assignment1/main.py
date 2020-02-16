@@ -1,10 +1,9 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import re
 
 Brush_Brand = ["Oral-B", "Any", "Reach", "Colgate", "Pepsodent", "Crest"]
-Brush_Type = ["Manual", "Battery"]
+Brush_Type = ["Manual", "Battery", "Rechargeable"]
 
 
 def match_brush_brand(col1, col2):
@@ -13,10 +12,15 @@ def match_brush_brand(col1, col2):
     match_type = None
     for brand in Brush_Brand:
         if (brand in col1) or (brand in str(col2)):
-            match_brand = brand
+            if brand == "Oral-B":
+                match_brand = "Oral-B"
+            else:
+                match_brand = "Others"
     for type in Brush_Type:
         if type.lower() in col1.lower() or type.lower() in str(col2).lower():
             match_type = type
+    if match_brand is None:
+        match_brand = "Others"
     if match_type is None:
         if "Batt" in col1 or "rechargeable" in col1:
             match_type = "Battery"
@@ -24,7 +28,6 @@ def match_brush_brand(col1, col2):
 
 
 Like_Traits = dict()
-
 
 def extract_like_traits(rows):
     for i in rows:
@@ -139,14 +142,15 @@ if __name__ == '__main__':
     # characteristices rating by brand
     df_character_rate = df_all.loc[:, 'Grip':'Packaging']
     df_character_rate['Brand'] = df_all.loc[:, 'Brand']
-    group = df_character_rate.groupby('Brand')
-    df_mean_value=group.apply(pd.DataFrame.mean)
+    df_character_rate['Type'] = df_all.loc[:, 'Type']
+    group = df_character_rate.groupby(['Brand', 'Type'])
+    df_mean_value = group.apply(pd.DataFrame.mean)
     grpd = group.size().to_frame('sample size')
-    ax=grpd.plot.pie(y='sample size', figsize=(5, 5),autopct='%1.1f%%')
+    ax = grpd.plot.pie(y='sample size', figsize=(5, 5), autopct='%1.1f%%')
     ax.get_figure().savefig('img/characteristics_rate_percentage.png')
-    print(grpd,df_mean_value.to_string())
-    ax=df_mean_value.T.plot(kind='bar', title="charateristices rate", figsize=(20, 10), legend=True,
-                 fontsize=12)
+    print(grpd, df_mean_value.to_string())
+    ax = df_mean_value.T.plot(kind='bar', title="charateristices rate", figsize=(20, 10), legend=True,
+                              fontsize=12)
     fig = ax.get_figure()
     fig.savefig('img/characteristics_rate.png')
     plt.show()
