@@ -144,7 +144,7 @@ df_desired_features = df.iloc[79:, :]
 df_desired_features = df_desired_features.T
 df_desired_features.columns = header.iloc[79:]
 df_desired_features.fillna(0, inplace=True)
-
+df_desired_features.insert(loc=0,column="Type",value=df_current_uses["Type"])
 data_dict.setdefault("most like to have", df_desired_features)
 
 for key, value in data_dict.items():
@@ -153,7 +153,3 @@ data_frames = data_dict.values()
 df_all = pd.concat(data_frames, axis=1)
 df_all.to_excel(writer, sheet_name="All data")
 writer.save()
-
-from wordcloud import WordCloud
-df_likes_features=df.loc[:, 'Likes'].dropna().tolist()
-df_likes_features
