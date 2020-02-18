@@ -77,12 +77,15 @@ data_dict.setdefault("Current uses", df_current_uses)
 # Q2. Likes
 df_likes = df.iloc[6:11, :]
 df_likes = df_likes.T
-df_likes.apply(lambda x: extract_like_traits(x), axis=1)
 
+df_likes = df_likes.apply(lambda x: ','.join(x.dropna().astype(str)), axis=1).to_frame()
+df_likes.columns=["Likes"]
 data_dict.setdefault("Likes", df_likes)
 # Q3. Dislikes
 df_dislikes = df.iloc[13:15, :]
 df_dislikes = df_dislikes.T
+df_dislikes = df_dislikes.apply(lambda x: ','.join(x.dropna().astype(str)), axis=1).to_frame()
+df_dislikes.columns=["Dislikes"]
 data_dict.setdefault("Dislikes", df_dislikes)
 # Q4. Rate the current price of the product
 df_rate_price = df.iloc[18, :]
@@ -150,3 +153,7 @@ data_frames = data_dict.values()
 df_all = pd.concat(data_frames, axis=1)
 df_all.to_excel(writer, sheet_name="All data")
 writer.save()
+
+from wordcloud import WordCloud
+df_likes_features=df.loc[:, 'Likes'].dropna().tolist()
+df_likes_features
